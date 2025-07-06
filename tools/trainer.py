@@ -1,8 +1,12 @@
 import os
 
 import torch
+import torch.optim as optim
+import torch.optim.lr_scheduler as lr_scheduler
+import torch.distributed as distributed
 
-from typing import Optional, Literal
+from handlers.checkpoint import CheckpointManager, load_checkpoint
+from typing import Optional, Literal, Dict, Any
 
 class Trainer:
     def __init__(
@@ -52,6 +56,27 @@ class Trainer:
         time_mask_param: int = 27,
         time_ratio: float = 1.0,
         zero_masking: bool = True,
-
+        # Training
+        lr: Optional[float] = None,
+        
+        # Checkpoint
+        checkpoint_path: Optional[str] = None,
+        checkpoint_folder: str = "./checkpoints",
+        n_saved_checkpoints: int = 3,
+        save_checkpoint_after_steps: Optional[int] = None,
+        save_checkpoint_after_epochs: int = 1,
+        # Early Stopping
+        early_stopping: bool = False,
+        n_patiences: int = 3,
+        observe: Literal['loss', 'score'] = 'loss',
+        # Logging
+        logging: bool = False,
+        logging_project: str = "W2v - BERT",
+        logging_name: Optional[str] = None
     ) -> None:
-        pass
+        self.rank = rank
+
+        checkpoint: Optional[Dict[str, Any]] = None
+        if checkpoint_path is not None and os.path.exists(checkpoint_path):
+            checkpoint = load_checkpoint(checkpoint_path)
+
