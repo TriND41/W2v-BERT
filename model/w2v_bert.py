@@ -36,7 +36,7 @@ class W2vBERT(nn.Module):
         time_mask_param: int = 27,
         time_ratio: float = 1.0,
         zero_masking: bool = True
-    ):
+    ) -> None:
         super().__init__()
         self.extractor = ConvolutionSubsampling(in_channels=in_channels, hidden_channels=hidden_channels)
         
@@ -81,15 +81,19 @@ class W2vBERT(nn.Module):
         x: torch.Tensor,
         attn_mask: Optional[torch.Tensor] = None
     ) -> Tuple[Tuple[torch.Tensor, torch.Tensor, torch.Tensor], Tuple[torch.Tensor, torch.Tensor, torch.Tensor]]:
+        # Extract raw data
         x = self.extractor(x)
         if attn_mask is not None:
             attn_mask = sample_mask(x, attn_mask)
         
+        # Quantize real data
         target_context_vectors, discreted_ids, prob_perplexity = self.quantization(x)
 
+        # Mask in time axis
         with torch.no_grad():
             masked_x, tmask = self.time_masking(x)
 
+        # Extract context vectors
         mlm_vectors, context_vectors = self.encoder(masked_x, attn_mask)
         context_vectors = self.contrastive_proj(context_vectors)
         mlm_vectors = self.mlm_proj(mlm_vectors)
