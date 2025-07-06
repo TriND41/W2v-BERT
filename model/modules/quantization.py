@@ -69,8 +69,6 @@ class GumbelQuantizer(nn.Module):
         avg_prob = F.softmax(x, dim=2).mean(dim=0) # [batch_size * length, num_groups]
         entropy = -torch.sum(avg_prob * torch.log(avg_prob + 1e-7), dim=1)
         prob_perplexity = torch.exp(entropy).sum()
-
-        temp = self.current_temperature
         
         x = F.gumbel_softmax(x, tau=self.current_temperature, hard=self.hard).type(x.dtype)
         x = x.view([batch_size * length, self.num_samples])
@@ -82,4 +80,4 @@ class GumbelQuantizer(nn.Module):
         x = x.sum(dim=2)
         x = x.view([batch_size, length, self.vq_dim])
 
-        return x, discreted_ids, temp, prob_perplexity
+        return x, discreted_ids, prob_perplexity

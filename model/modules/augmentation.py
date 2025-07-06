@@ -39,4 +39,4 @@ class TimeMasking(nn.Module):
         tmask = ((tmask >= t_0.unsqueeze(1)) & (tmask < t_1.unsqueeze(1)))
         tmask = tmask.any(dim=-1)
 
-        return x.masked_fill(tmask.unsqueeze(dim=2), value=mask_value)
+        return x.masked_fill(tmask.unsqueeze(dim=2), value=mask_value), tmask
