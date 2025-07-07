@@ -5,7 +5,11 @@ import torch.optim as optim
 import torch.optim.lr_scheduler as lr_scheduler
 import torch.distributed as distributed
 
+from handlers.loaders import AudioDataset
 from handlers.checkpoint import CheckpointManager, load_checkpoint
+from handlers.configs import W2vBERTConfig, AudioProcessorConfig, LogMelSpectrogramConfig
+from handlers.symbols import CheckpointKey
+
 from typing import Optional, Literal, Dict, Any
 
 class Trainer:
@@ -58,7 +62,6 @@ class Trainer:
         zero_masking: bool = True,
         # Training
         lr: Optional[float] = None,
-        
         # Checkpoint
         checkpoint_path: Optional[str] = None,
         checkpoint_folder: str = "./checkpoints",
@@ -80,3 +83,29 @@ class Trainer:
         if checkpoint_path is not None and os.path.exists(checkpoint_path):
             checkpoint = load_checkpoint(checkpoint_path)
 
+            self.audio_configs = AudioProcessorConfig(**checkpoint[CheckpointKey.AUDIO_PROCESSOR])
+            self.log_melspec_configs = LogMelSpectrogramConfig(**checkpoint[CheckpointKey.LOG_MELSPECTROGRAM])
+            self.hyper_params = W2vBERTConfig(**checkpoint[CheckpointKey.HYPER_PARAMS])
+        else:
+            self.audio_configs = AudioProcessorConfig(sample_rate=sample_rate)
+            self.log_melspec_configs = LogMelSpectrogramConfig(
+                sample_rate=sample_rate,
+                n_fft=n_fft,
+                win_length=win_length,
+                hop_length=hop_length,
+                f_min=f_min,
+                f_max=f_max,
+                pad=pad,
+                n_mels=n_mels,
+                window_fn=window_fn,
+                power=power,
+                frame_norm=frame_norm,
+                window_norm=window_norm,
+                center=center,
+                pad_mode=pad_mode,
+                slaney_norm=slaney_norm,
+                mel_scale=mel_scale
+            )
+        self.hyper_params = W2vBERTConfig(
+            
+        )
